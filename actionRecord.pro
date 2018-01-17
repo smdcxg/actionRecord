@@ -35,3 +35,4 @@ FORMS += \
         mainwindow.ui
 
 LIBS += User32.lib
+LIBS += Psapi.lib

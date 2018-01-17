@@ -6,6 +6,7 @@
 #define HH_H
 #include <QApplication>
 #include <Windows.h>
+#include <Psapi.h>
 #include <QDebug>
 #include <QDebug>
 
@@ -31,9 +32,23 @@ LRESULT CALLBACK keyProc(int nCode,WPARAM wParam,LPARAM lParam )
 //鼠标钩子过程
 LRESULT CALLBACK mouseProc(int nCode,WPARAM wParam,LPARAM lParam )
 {
+    HWND hwnd, l;
+    TCHAR lpString[MAX_PATH];
+    DWORD ProcessID;
+    HANDLE hProcess;
+    wchar_t path[MAX_PATH+1];
 
     POINT point = ((MOUSEHOOKSTRUCT *) lParam)->pt;//鼠标位置信息
-    qDebug() << point.x << ' ' << point.y;
+    hwnd = WindowFromPoint(point);
+    //qDebug() << l_handle << ' ' << point.x << ' ' << point.y;
+    //GetWindowText(l_handle, lpString, 10);
+    ProcessID = GetWindowThreadProcessId(hwnd, &ProcessID);
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |PROCESS_VM_READ, false, ProcessID);
+    GetModuleFileNameEx(hProcess, NULL, path, MAX_PATH + 1);
+    qDebug() << QString::fromWCharArray(path);
+    l = GetParent(hwnd);
+    GetWindowText(l, lpString, MAX_PATH);
+    qDebug() << GetForegroundWindow() << QString((QChar*)lpString);
     return 0;
 
 }
@@ -47,6 +62,7 @@ void unHook()
 //安装钩子,调用该函数即安装钩子
 void setHook()
 {
+    LPARAM lParam;
     //这两个底层钩子,不要DLL就可以全局
     //                         底层键盘钩子
     keyHook =SetWindowsHookEx( WH_KEYBOARD_LL,keyProc,GetModuleHandle(NULL),0);
