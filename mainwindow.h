@@ -5,13 +5,13 @@
 #include <QMainWindow>
 #include <QAbstractNativeEventFilter>
 #include <windows.h>
-#pragma comment(lib, "user32.lib")
+
 
 namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow, public QAbstractNativeEventFilter
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
@@ -21,19 +21,6 @@ public:
     ~MainWindow();
 
 
-    virtual bool nativeEventFilter(const QByteArray &eventType, void *message, long *) Q_DECL_OVERRIDE
-    {
-        qDebug() << eventType;
-        if(eventType == "windows_generic_MSG" || eventType == "windows_dispatcher_MSG")
-        {
-            MSG* pMsg = reinterpret_cast<MSG*>(message);
-            if(pMsg->message == WM_COPYDATA)
-            {
-                qDebug()<<"MainWindow windows system message WM_COPYDATA";
-            }
-        }
-        return false;
-    }
 
 
 private:

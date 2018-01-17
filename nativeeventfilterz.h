@@ -3,7 +3,7 @@
   只留下F12做为程序退出,屏蔽键盘和鼠标,测试时请注意
   ********************************************************/
 #ifndef HH_H
-#define HH_H
+#define HH_Hsqllite3
 #include <QApplication>
 #include <Windows.h>
 #include <Psapi.h>
@@ -29,26 +29,55 @@ LRESULT CALLBACK keyProc(int nCode,WPARAM wParam,LPARAM lParam )
     return 0;//返回1表示截取消息不再传递,返回0表示不作处理,消息继续传递
 
 }
+BOOL SetPrivilege()   // 提取权限
+{
+    HANDLE hToken;
+    TOKEN_PRIVILEGES NewState;
+    LUID luidPrivilegeLUID;
+
+    //获取进程令牌
+    if(!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken)||!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luidPrivilegeLUID))
+    {
+        printf("SetPrivilege Error\n");
+        return FALSE;
+    }
+    NewState.PrivilegeCount = 1;
+    NewState.Privileges[0].Luid = luidPrivilegeLUID;
+    NewState.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    //提示进程权限，注意该函数也可以改变线程的权限，如果hToken指向一个线程的令牌
+    if(!AdjustTokenPrivileges(hToken, FALSE, &NewState, NULL, NULL, NULL))
+    {
+        printf("AdjustTokenPrivilege Errro\n");
+        return FALSE;
+    }
+    return TRUE;
+}
 //鼠标钩子过程
 LRESULT CALLBACK mouseProc(int nCode,WPARAM wParam,LPARAM lParam )
 {
     HWND hwnd, l;
     TCHAR lpString[MAX_PATH];
+    //DWORD len;
     DWORD ProcessID;
+    DWORD nSize = MAX_PATH+1;
     HANDLE hProcess;
-    wchar_t path[MAX_PATH+1];
+    WCHAR path[MAX_PATH+1];
 
     POINT point = ((MOUSEHOOKSTRUCT *) lParam)->pt;//鼠标位置信息
     hwnd = WindowFromPoint(point);
     //qDebug() << l_handle << ' ' << point.x << ' ' << point.y;
     //GetWindowText(l_handle, lpString, 10);
-    ProcessID = GetWindowThreadProcessId(hwnd, &ProcessID);
+    GetWindowThreadProcessId(hwnd, &ProcessID);
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |PROCESS_VM_READ, false, ProcessID);
-    GetModuleFileNameEx(hProcess, NULL, path, MAX_PATH + 1);
-    qDebug() << QString::fromWCharArray(path);
-    l = GetParent(hwnd);
+    //len = GetProcessImageFileName(hProcess, path, nSize);   // 兼容性好
+    if(!QueryFullProcessImageName(hProcess, 0, path, &nSize)){  // win7 以上操作系统
+        qDebug() << 'QueryFullProcessImageName';
+    }
+    qDebug() << (long)len << QString((QChar*)path);
+
+    l = GetParent(hwnd);   // 获取父窗口句柄
     GetWindowText(l, lpString, MAX_PATH);
-    qDebug() << GetForegroundWindow() << QString((QChar*)lpString);
+    //qDebug() << GetForegroundWindow() << QString((QChar*)lpString);
     return 0;
 
 }

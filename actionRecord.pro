@@ -36,3 +36,4 @@ FORMS += \
 
 LIBS += User32.lib
 LIBS += Psapi.lib
+LIBS += Advapi32.lib
