@@ -25,11 +25,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    log.cpp
 
 HEADERS += \
         mainwindow.h \
-    nativeeventfilterz.h
+    nativeeventfilterz.h \
+    log.h
 
 FORMS += \
         mainwindow.ui

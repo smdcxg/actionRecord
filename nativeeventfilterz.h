@@ -10,8 +10,12 @@
 #include <QDebug>
 #include <QDebug>
 
+#include "log.h"
+
 HHOOK keyHook=NULL;
 HHOOK mouseHook=NULL;
+LogAction *lA = new LogAction();
+
 //声明卸载函数,以便调用
 void unHook();
 //键盘钩子过程
@@ -71,13 +75,14 @@ LRESULT CALLBACK mouseProc(int nCode,WPARAM wParam,LPARAM lParam )
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |PROCESS_VM_READ, false, ProcessID);
     //len = GetProcessImageFileName(hProcess, path, nSize);   // 兼容性好
     if(!QueryFullProcessImageName(hProcess, 0, path, &nSize)){  // win7 以上操作系统
-        qDebug() << 'QueryFullProcessImageName';
+        qDebug() << "QueryFullProcessImageName";
     }
-    qDebug() << (long)len << QString((QChar*)path);
+    //qDebug() << QString((QChar*)path);
 
     l = GetParent(hwnd);   // 获取父窗口句柄
     GetWindowText(l, lpString, MAX_PATH);
     //qDebug() << GetForegroundWindow() << QString((QChar*)lpString);
+    qDebug() << lA->rendLog(QString((QChar*)path), QString((QChar*)lpString), 0, point.x, point.y, 0);
     return 0;
 
 }
@@ -86,6 +91,7 @@ void unHook()
 {
     UnhookWindowsHookEx(keyHook);
     UnhookWindowsHookEx(mouseHook);
+    delete lA;
 
 }
 //安装钩子,调用该函数即安装钩子

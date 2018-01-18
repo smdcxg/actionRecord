@@ -7,7 +7,6 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
-
     qDebug() << "MainWindow.winId : " << w.winId() << " , " << GetCurrentThreadId();
 
     return a.exec();
