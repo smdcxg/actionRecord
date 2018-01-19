@@ -12,9 +12,11 @@
 class LogAction
 {
 public:
-    void log();
-    bool rendLog(QString path, QString title, qint8 type, qint32 x, qint32 y, qint32 key);
-
+    explicit LogAction();
+    ~LogAction();
+    bool rendLog(QString path, QString title, QString fatherTitle, qint8 type, qint32 x, qint32 y, qint32 key);
+    QFile *fileout;
+    QTextStream txtOutput;
 
 private:
     bool isDirExist(QString fullPath);

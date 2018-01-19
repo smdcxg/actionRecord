@@ -16,23 +16,11 @@ HHOOK keyHook=NULL;
 HHOOK mouseHook=NULL;
 LogAction *lA = new LogAction();
 
+TCHAR lpString[MAX_PATH], fpString[MAX_PATH];
+POINT point;
+
 //声明卸载函数,以便调用
 void unHook();
-//键盘钩子过程
-LRESULT CALLBACK keyProc(int nCode,WPARAM wParam,LPARAM lParam )
-{
-
-    qDebug() << nCode << ' ' << wParam << ' ' << lParam;
-    //在WH_KEYBOARD_LL模式下lParam 是指向KBDLLHOOKSTRUCT类型地址
-    KBDLLHOOKSTRUCT *pkbhs = (KBDLLHOOKSTRUCT *) lParam;
-    if(pkbhs->vkCode==VK_F12)
-    {
-        void unHook();
-        qApp->quit();
-    }
-    return 0;//返回1表示截取消息不再传递,返回0表示不作处理,消息继续传递
-
-}
 BOOL SetPrivilege()   // 提取权限
 {
     HANDLE hToken;
@@ -54,36 +42,57 @@ BOOL SetPrivilege()   // 提取权限
         printf("AdjustTokenPrivilege Errro\n");
         return FALSE;
     }
+
     return TRUE;
 }
-//鼠标钩子过程
-LRESULT CALLBACK mouseProc(int nCode,WPARAM wParam,LPARAM lParam )
+BOOL GetCurrentWindow(POINT point, int wParam, int type)
 {
-    HWND hwnd, l;
-    TCHAR lpString[MAX_PATH];
+    HWND hwnd, fatherHwnd;
     //DWORD len;
     DWORD ProcessID;
-    DWORD nSize = MAX_PATH+1;
     HANDLE hProcess;
+    DWORD nSize = MAX_PATH+1;
     WCHAR path[MAX_PATH+1];
 
-    POINT point = ((MOUSEHOOKSTRUCT *) lParam)->pt;//鼠标位置信息
     hwnd = WindowFromPoint(point);
-    //qDebug() << l_handle << ' ' << point.x << ' ' << point.y;
-    //GetWindowText(l_handle, lpString, 10);
+    //qDebug() << point.x << ' ' << point.y;
     GetWindowThreadProcessId(hwnd, &ProcessID);
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |PROCESS_VM_READ, false, ProcessID);
     //len = GetProcessImageFileName(hProcess, path, nSize);   // 兼容性好
     if(!QueryFullProcessImageName(hProcess, 0, path, &nSize)){  // win7 以上操作系统
         qDebug() << "QueryFullProcessImageName";
+        return false;
     }
     //qDebug() << QString((QChar*)path);
 
-    l = GetParent(hwnd);   // 获取父窗口句柄
-    GetWindowText(l, lpString, MAX_PATH);
+    GetWindowText(hwnd, lpString, MAX_PATH);
+    fatherHwnd = GetParent(hwnd);   // 获取父窗口句柄
+    GetWindowText(fatherHwnd, fpString, MAX_PATH);
     //qDebug() << GetForegroundWindow() << QString((QChar*)lpString);
-    qDebug() << lA->rendLog(QString((QChar*)path), QString((QChar*)lpString), 0, point.x, point.y, 0);
-    return 0;
+    return lA->rendLog(QString((QChar*)path), QString((QChar*)lpString), QString((QChar*)fpString), type, point.x, point.y, wParam);
+}
+//键盘钩子过程
+LRESULT CALLBACK keyProc(int nCode,WPARAM wParam,LPARAM lParam )
+{
+
+    //qDebug() << wParam << ' ' << lParam;
+    //在WH_KEYBOARD_LL模式下lParam 是指向KBDLLHOOKSTRUCT类型地址
+    KBDLLHOOKSTRUCT *pkbhs = (KBDLLHOOKSTRUCT *) lParam;
+    if(pkbhs->vkCode==VK_F12)
+    {
+        void unHook();
+        qApp->quit();
+    }
+    GetCurrentWindow(point, pkbhs->vkCode, 1);
+    return 0;//返回1表示截取消息不再传递,返回0表示不作处理,消息继续传递
+
+}
+//鼠标钩子过程
+LRESULT CALLBACK mouseProc(int nCode,WPARAM wParam,LPARAM lParam )
+{
+    point = ((MOUSEHOOKSTRUCT *) lParam)->pt;//鼠标位置信息
+    GetCurrentWindow(point, wParam, 0);
+    return 0;//返回1表示截取消息不再传递,返回0表示不作处理,消息继续传递
 
 }
 //卸载钩子

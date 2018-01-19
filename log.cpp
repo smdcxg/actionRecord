@@ -1,27 +1,31 @@
 #include "log.h"
 
-void LogAction::log()
-{
-
-}
-bool LogAction::rendLog(QString path, QString title, qint8 type, qint32 x, qint32 y, qint32 key)
+LogAction::LogAction()
 {
     QString fullPath = QCoreApplication::applicationDirPath()+"/log/";
-     QDateTime time = QDateTime::currentDateTime();//获取系统现在的时间
+    QDateTime time = QDateTime::currentDateTime();//获取系统现在的时间
     QString logFilePath(fullPath+time.toString("yyyy-MM-dd")+".txt");
+    qDebug() << logFilePath;
     isDirExist(fullPath);
-    if(isFileExist(logFilePath)){
-
-    }
-    QFile fileout(logFilePath);
-    if(!fileout.open(QIODevice::WriteOnly | QIODevice::Text))
+    fileout = new QFile(logFilePath);
+    if(!fileout->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
     {
         qDebug() << "Open failed";
-        return false;
     }
-    QTextStream txtOutput(&fileout);
-    txtOutput << "["+time.toString("yyyy-MM-dd hh:mm:ss ddd")+"]" << path << title << type << x << y << key << "\n";
-    fileout.close();
+
+}
+LogAction::~LogAction()
+{
+    fileout->close();
+}
+bool LogAction::rendLog(QString path, QString title, QString fatherTitle, qint8 type, qint32 x, qint32 y, qint32 key)
+{
+    QDateTime time = QDateTime::currentDateTime();//获取系统现在的时间
+
+    QTextStream txtOutput(fileout);
+    QFileInfo fileInfo(path);
+    txtOutput << "["+time.toString("yyyy-MM-dd hh:mm:ss.zzz")+"]" << "\t" << fileInfo.fileName()  << "\t" << title << "\t" << fatherTitle << "\t" << type  << "\t" << x  << "\t" << y  << "\t" << key << "\n";
+    txtOutput.flush();
     return true;
 }
 bool LogAction::isDirExist(QString fullPath)

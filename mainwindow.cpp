@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    qDebug() << SetPrivilege();
+    SetPrivilege();
     setHook();
     ui->setupUi(this);
 }
